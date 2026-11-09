@@ -91,11 +91,14 @@ function Canvas({
 
         <div className="board-footer">
           <span>
-            <kbd>drag</kbd> to move
+            <kbd>Drag the dotted grip</kbd> to move
           </span>
           <span className="footer-divider">·</span>
           <span>
-            <kbd>edge</kbd> to resize
+            <kbd>Drag an edge or corner</kbd> to resize
+          </span>
+          <span className="footer-keyboard">
+            Keyboard: focus a resize handle and use the arrow keys
           </span>
         </div>
       </div>

@@ -238,22 +238,27 @@ button {
 
   .note-grip {
     display: flex;
-    height: 29px;
+    min-height: 40px;
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
     border-bottom: 1px solid var(--color-note-grip-border);
     cursor: grab;
     touch-action: none;
+    transition: background-color 120ms ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-note-grip) 8%, transparent);
+    }
 
     &:active {
       cursor: grabbing;
     }
 
     span {
-      width: 3px;
-      height: 3px;
+      width: 4px;
+      height: 4px;
       border-radius: 50%;
       background: var(--color-note-grip);
     }
@@ -300,9 +305,9 @@ button {
 
 .resize-handle--top,
 .resize-handle--bottom {
-  right: 10px;
-  left: 10px;
-  height: 10px;
+  right: 14px;
+  left: 14px;
+  height: 14px;
   cursor: ns-resize;
 }
 
@@ -316,9 +321,9 @@ button {
 
 .resize-handle--left,
 .resize-handle--right {
-  top: 10px;
-  bottom: 10px;
-  width: 10px;
+  top: 14px;
+  bottom: 14px;
+  width: 14px;
   cursor: ew-resize;
 }
 
@@ -335,8 +340,8 @@ button {
 .resize-handle--bottom-left,
 .resize-handle--bottom-right {
   z-index: 5;
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
 }
 
 .resize-handle--top-left,
@@ -461,25 +466,34 @@ button {
   bottom: 26px;
   left: 24px;
   display: flex;
+  max-width: calc(100% - 210px);
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   color: var(--color-text-low);
-  font-size: 9px;
+  font-size: 11px;
   pointer-events: none;
 }
 
 .board-footer kbd {
-  padding: 3px 5px;
+  padding: 4px 6px;
   border: 1px solid var(--color-divider);
   border-radius: 4px;
   background: var(--color-footer-background);
   color: var(--color-text-footer);
   font-family: $font-mono;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .footer-divider {
   color: var(--color-divider-footer);
+}
+
+.footer-keyboard {
+  flex-basis: 100%;
+  padding-left: 2px;
+  color: var(--color-text-muted);
+  font-size: 10px;
 }
 
 .sr-only {
@@ -593,13 +607,18 @@ button {
   .board-footer {
     bottom: 15px;
     left: 12px;
+    max-width: calc(100% - 145px);
     gap: 5px;
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .board-footer kbd {
-    padding: 2px 4px;
-    font-size: 7px;
+    padding: 3px 4px;
+    font-size: 8px;
+  }
+
+  .footer-keyboard {
+    font-size: 8px;
   }
 
   .placement-hint {

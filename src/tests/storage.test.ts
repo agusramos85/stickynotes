@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_CANVAS_STATE, NOTE_COLORS } from "./model";
-import type { CanvasState } from "./model";
+import { DEFAULT_CANVAS_STATE, NOTE_COLORS } from "../model";
+import type { CanvasState } from "../model";
 import {
   describeStorageError,
   loadCanvasState,
   saveCanvasState,
-} from "./storage";
+} from "../storage";
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();

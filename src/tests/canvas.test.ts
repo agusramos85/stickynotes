@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getDraggedNote, overlapsTrashZone } from "./canvas";
-import type { DragState } from "./model";
+import { getDraggedNote, overlapsTrashZone } from "../canvas";
+import type { DragState } from "../model";
 
 const moveDrag: DragState = {
   id: "note-1",

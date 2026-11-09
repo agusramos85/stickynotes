@@ -97,10 +97,10 @@ function NoteCard({
       }
     >
       <div
-        aria-label="Drag to move note"
+        aria-label="Move note. Drag this dotted handle."
         className="note-grip"
         onPointerDown={(event) => onMoveStart(event, note)}
-        title="Drag to move"
+        title="Drag this dotted handle to move the note"
       >
         <span />
         <span />
