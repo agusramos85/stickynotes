@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type {
-  CSSProperties,
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
+import Canvas from "./components/Canvas";
 import { clamp, getDraggedNote, overlapsTrashZone } from "./canvas";
 import {
   MAX_HEIGHT,
@@ -24,8 +24,7 @@ function App() {
   const boardRef = useRef<HTMLDivElement>(null);
   const [initialLoad] = useState(loadCanvasState);
   const [notes, setNotes] = useState<Note[]>(initialLoad.state.notes);
-  const [width, setWidth] = useState(initialLoad.state.width);
-  const [height, setHeight] = useState(initialLoad.state.height);
+  const { width, height } = initialLoad.state;
   const [storageError, setStorageError] = useState(initialLoad.error);
   const [saveStatus, setSaveStatus] = useState(
     initialLoad.hasSavedState ? "Saved locally" : "Auto-save on",
@@ -35,7 +34,6 @@ function App() {
   const [isOverTrash, setIsOverTrash] = useState(false);
 
   useEffect(() => {
-    // Keep an untouched initial load from immediately rewriting the saved data.
     if (
       notes === initialLoad.state.notes &&
       width === initialLoad.state.width &&
@@ -45,7 +43,6 @@ function App() {
     }
 
     setSaveStatus("Saving…");
-    // Debounce keystrokes and pointer movement to avoid writing on every event.
     const timeout = window.setTimeout(() => {
       try {
         saveCanvasState({ notes, width, height });
@@ -152,7 +149,12 @@ function App() {
         : {
             ...dragStart,
             kind,
-            edges: edges ?? { top: false, right: true, bottom: true, left: false },
+            edges: edges ?? {
+              top: false,
+              right: true,
+              bottom: true,
+              left: false,
+            },
           },
     );
   };
@@ -236,6 +238,23 @@ function App() {
     setIsPlacing(false);
   };
 
+  const changeNoteText = (id: string, text: string) => {
+    setNotes((current) =>
+      current.map((note) => (note.id === id ? { ...note, text } : note)),
+    );
+  };
+
+  const startMovingNote = (
+    event: ReactPointerEvent<HTMLElement>,
+    note: Note,
+  ) => beginDrag(event, note, "move");
+
+  const startResizingNote = (
+    event: ReactPointerEvent<HTMLElement>,
+    note: Note,
+    edges: ResizeEdges,
+  ) => beginDrag(event, note, "resize", edges);
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -275,338 +294,18 @@ function App() {
         </div>
       </header>
 
-      <section className="work-area" aria-label="Sticky note workspace">
-        <div className="board-heading">
-          <div>
-            <p className="eyebrow">YOUR CANVAS</p>
-            <h1>A place to think out loud.</h1>
-          </div>
-          <p className="board-date">
-            <span aria-hidden="true">✳</span> Take it one thought at a time
-          </p>
-        </div>
-
-        <div
-          className={`board${isPlacing ? " is-placing" : ""}`}
-          onClick={placeNote}
-          ref={boardRef}
-        >
-          <div className="board-toolbar" onClick={(event) => event.stopPropagation()}>
-            <div className="size-label">
-              <span className="size-icon" aria-hidden="true">
-                ↗
-              </span>
-              <span>Note size</span>
-            </div>
-            <label className="size-control">
-              <span className="sr-only">Note width in pixels</span>
-              <input
-                aria-label="Drag to change note width"
-                className="size-slider"
-                max={MAX_WIDTH}
-                min={MIN_WIDTH}
-                onChange={(event) => setWidth(Number(event.target.value))}
-                type="range"
-                value={width}
-              />
-              <span className="size-value-wrap">
-                <input
-                  aria-label="Note width in pixels"
-                  className="size-value"
-                  max={MAX_WIDTH}
-                  min={MIN_WIDTH}
-                  onChange={(event) => setWidth(Number(event.target.value))}
-                  type="number"
-                  value={width}
-                />
-                <span className="unit">w</span>
-              </span>
-            </label>
-            <span className="dimension-times">×</span>
-            <label className="size-control">
-              <span className="sr-only">Note height in pixels</span>
-              <input
-                aria-label="Drag to change note height"
-                className="size-slider"
-                max={MAX_HEIGHT}
-                min={MIN_HEIGHT}
-                onChange={(event) => setHeight(Number(event.target.value))}
-                type="range"
-                value={height}
-              />
-              <span className="size-value-wrap">
-                <input
-                  aria-label="Note height in pixels"
-                  className="size-value"
-                  max={MAX_HEIGHT}
-                  min={MIN_HEIGHT}
-                  onChange={(event) => setHeight(Number(event.target.value))}
-                  type="number"
-                  value={height}
-                />
-                <span className="unit">h</span>
-              </span>
-            </label>
-            <span className="size-unit">px</span>
-          </div>
-
-          {notes.map((note) => (
-            <article
-              className={`note${drag?.id === note.id ? " is-dragging" : ""}`}
-              key={note.id}
-              onClick={(event) => event.stopPropagation()}
-              style={
-                {
-                  "--note-color": note.color,
-                  left: note.x,
-                  top: note.y,
-                  width: note.width,
-                  height: note.height,
-                } as CSSProperties
-              }
-            >
-              <div
-                aria-label="Drag to move note"
-                className="note-grip"
-                onPointerDown={(event) => beginDrag(event, note, "move")}
-                title="Drag to move"
-              >
-                <span />
-                <span />
-              </div>
-              <button
-                aria-label="Resize note from top edge"
-                className="resize-handle resize-handle--top"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: true,
-                    right: false,
-                    bottom: false,
-                    left: false,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: true,
-                    right: false,
-                    bottom: false,
-                    left: false,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <button
-                aria-label="Resize note from right edge"
-                className="resize-handle resize-handle--right"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: false,
-                    right: true,
-                    bottom: false,
-                    left: false,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: false,
-                    right: true,
-                    bottom: false,
-                    left: false,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <button
-                aria-label="Resize note from bottom edge"
-                className="resize-handle resize-handle--bottom"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: false,
-                    right: false,
-                    bottom: true,
-                    left: false,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: false,
-                    right: false,
-                    bottom: true,
-                    left: false,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <button
-                aria-label="Resize note from left edge"
-                className="resize-handle resize-handle--left"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: false,
-                    right: false,
-                    bottom: false,
-                    left: true,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: false,
-                    right: false,
-                    bottom: false,
-                    left: true,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <button
-                aria-label="Resize note from top-left corner"
-                className="resize-handle resize-handle--top-left"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: true,
-                    right: false,
-                    bottom: false,
-                    left: true,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: true,
-                    right: false,
-                    bottom: false,
-                    left: true,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <button
-                aria-label="Resize note from top-right corner"
-                className="resize-handle resize-handle--top-right"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: true,
-                    right: true,
-                    bottom: false,
-                    left: false,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: true,
-                    right: true,
-                    bottom: false,
-                    left: false,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <button
-                aria-label="Resize note from bottom-left corner"
-                className="resize-handle resize-handle--bottom-left"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: false,
-                    right: false,
-                    bottom: true,
-                    left: true,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: false,
-                    right: false,
-                    bottom: true,
-                    left: true,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-              <textarea
-                aria-label="Note text"
-                onChange={(event) => {
-                  const text = event.target.value;
-                  setNotes((current) =>
-                    current.map((item) =>
-                      item.id === note.id ? { ...item, text } : item,
-                    ),
-                  );
-                }}
-                placeholder="Write something..."
-                value={note.text}
-              />
-              <span className="note-fold" aria-hidden="true" />
-              <button
-                aria-label="Resize note from bottom-right corner"
-                className="resize-handle resize-handle--bottom-right"
-                onKeyDown={(event) =>
-                  resizeWithKeyboard(event, note, {
-                    top: false,
-                    right: true,
-                    bottom: true,
-                    left: false,
-                  })
-                }
-                onPointerDown={(event) =>
-                  beginDrag(event, note, "resize", {
-                    top: false,
-                    right: true,
-                    bottom: true,
-                    left: false,
-                  })
-                }
-                title="Drag to resize"
-                type="button"
-              />
-            </article>
-          ))}
-
-          {notes.length === 0 && !isPlacing && (
-            <div className="empty-prompt">
-              <div className="empty-sparkle" aria-hidden="true">
-                ✳
-              </div>
-              <p className="empty-title">Your canvas is all yours.</p>
-              <p>Start with a little note — click the button above.</p>
-            </div>
-          )}
-
-          {isPlacing && (
-            <div className="placement-hint">
-              <span className="placement-crosshair" aria-hidden="true">
-                +
-              </span>
-              Click anywhere to place your note
-              <span className="hint-separator">·</span>
-              {width} × {height}px
-            </div>
-          )}
-
-          <div className={`trash-zone${isOverTrash ? " is-active" : ""}`}>
-            <span aria-hidden="true">{isOverTrash ? "✦" : "⌫"}</span>
-            <div>
-              <strong>{isOverTrash ? "Let it go" : "Drop to remove"}</strong>
-              <small>drag a note here</small>
-            </div>
-          </div>
-
-          <div className="board-footer">
-            <span>
-              <kbd>drag</kbd> to move
-            </span>
-            <span className="footer-divider">·</span>
-            <span>
-              <kbd>edge</kbd> to resize
-            </span>
-          </div>
-        </div>
-      </section>
+      <Canvas
+        boardRef={boardRef}
+        drag={drag}
+        isOverTrash={isOverTrash}
+        isPlacing={isPlacing}
+        notes={notes}
+        onMoveStart={startMovingNote}
+        onPlaceNote={placeNote}
+        onResizeKey={resizeWithKeyboard}
+        onResizeStart={startResizingNote}
+        onTextChange={changeNoteText}
+      />
     </main>
   );
 }

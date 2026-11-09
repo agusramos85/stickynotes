@@ -15,7 +15,7 @@ export function overlapsTrashZone(
   boardWidth: number,
   boardHeight: number,
 ) {
-  // Keep this target aligned with the trash zone's CSS size and 20px board inset.
+  // Match the desktop trash-zone dimensions and inset; mobile uses a smaller visual target.
   const trashX = boardWidth - 168;
   const trashY = boardHeight - 98;
   return (
